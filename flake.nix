@@ -14,7 +14,7 @@
       python-package-list = p: with p; [
         pip
       ];
-      python = pkgs.python310.withPackages python-package-list;
+      python = pkgs.python312.withPackages python-package-list;
     in
     {
     devShells.x86_64-linux.default = pkgs.mkShell {

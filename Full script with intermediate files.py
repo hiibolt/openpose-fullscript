@@ -1,6 +1,7 @@
 import os
 import json
 import math
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from sklearn.linear_model import LinearRegression
@@ -8,8 +9,8 @@ from sklearn.experimental import enable_iterative_imputer
 from sklearn.impute import IterativeImputer
 
 # Folder Paths
-INPUT_ROOT = r'C:\Users\rajum\PycharmProjects\ASD\Full script\JSON input'
-OUTPUT_FOLDER = 'C:/Users/rajum/PycharmProjects/ASD/Full script/Gait_parameters/'
+INPUT_ROOT = r'/home/nixos/Development/openpose-fullscript/json'
+OUTPUT_FOLDER = '/home/nixos/Development/openpose-fullscript/Gait_parameters/'
 
 # Create output folder if it doesn't exist
 os.makedirs(OUTPUT_FOLDER, exist_ok=True)
@@ -243,8 +244,8 @@ from sklearn.experimental import enable_iterative_imputer
 from sklearn.impute import IterativeImputer
 
 # Folder Paths
-INPUT_ROOT = r'C:\Users\rajum\PycharmProjects\ASD\Full script\JSON input'
-OUTPUT_FOLDER = r'C:\Users\rajum\PycharmProjects\ASD\Full script\Gait_parameters'
+INPUT_ROOT = r'/home/nixos/Development/openpose-fullscript/json'
+OUTPUT_FOLDER = '/home/nixos/Development/openpose-fullscript/Gait_parameters/'
 
 # Create output folder if it doesn't exist
 os.makedirs(OUTPUT_FOLDER, exist_ok=True)
@@ -475,8 +476,8 @@ from scipy.interpolate import CubicSpline
 import numpy as np
 
 # File paths
-csv_dir = r'C:\Users\rajum\PycharmProjects\ASD\Full script\Gait_parameters'
-output_dir_selected = r'C:\Users\rajum\PycharmProjects\ASD\Full script\Selected_one_gait_CSV'
+csv_dir = r'/home/nixos/Development/openpose-fullscript/Gait_parameters'
+output_dir_selected = r'/home/nixos/Development/openpose-fullscript/Selected_one_gait_CSV'
 
 # Ensure the output directories exist
 os.makedirs(output_dir_selected, exist_ok=True)
@@ -559,8 +560,8 @@ import os
 import pandas as pd
 
 # Input and output folder paths
-input_folder = r"C:\Users\rajum\PycharmProjects\ASD\Full script\Selected_one_gait_CSV"
-output_folder = r"C:\Users\rajum\PycharmProjects\ASD\Full script\Combined_front_side_columns"
+input_folder = r"/home/nixos/Development/openpose-fullscript/Selected_one_gait_CSV"
+output_folder = r"/home/nixos/Development/openpose-fullscript/Combined_front_side_columns"
 
 # Ensure the output directory exists
 os.makedirs(output_folder, exist_ok=True)
@@ -628,11 +629,11 @@ from sklearn.preprocessing import MinMaxScaler
 from tensorflow.keras.models import load_model
 
 # --- Load the trained model ---
-model_path = r'C:\Users\rajum\PycharmProjects\ASD\Full script\Model\ASD_Classifier_Model.h5'  # Replace with your actual model file path
+model_path = r'/home/nixos/Development/openpose-fullscript/Model/ASD_Classifier_Model.h5'  # Replace with your actual model file path
 model = load_model(model_path)  # Load the saved model
 
 # --- Folder containing the CSV files ---
-input_folder = r'C:\Users\rajum\PycharmProjects\ASD\Full script\Combined_front_side_columns'
+input_folder = r'/home/nixos/Development/openpose-fullscript/Combined_front_side_columns'
 
 # --- Function to validate CSV files ---
 def validate_csv(file_path):
@@ -674,7 +675,7 @@ for filename in os.listdir(input_folder):
             print(f"File: {filename}, Prediction: {prediction_label}")
 
 # Save results to a CSV file
-output_dir = r"C:\Users\rajum\PycharmProjects\ASD\Full script\Results"
+output_dir = r"/home/nixos/Development/openpose-fullscript/Results"
 output_file = os.path.join(output_dir, "predictions.csv")
 os.makedirs(output_dir, exist_ok=True)
 
@@ -683,6 +684,3 @@ results_df = pd.DataFrame(results)  # Convert results to a DataFrame
 results_df.to_csv(output_file, index=False)  # Save DataFrame to CSV file
 
 print(f"Results saved to {output_file}")
-
-
-
