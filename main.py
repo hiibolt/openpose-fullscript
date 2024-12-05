@@ -7,6 +7,7 @@ import pandas as pd
 from sklearn.linear_model import LinearRegression
 from sklearn.experimental import enable_iterative_imputer
 from sklearn.impute import IterativeImputer
+from scipy.interpolate import CubicSpline
 
 # Folder Paths
 INPUT_ROOT = r'/home/nixos/Development/openpose-fullscript/json'
@@ -231,187 +232,6 @@ def process_subjects_json():
     if discrepancy_subjects:
         print("\nSubjects with discrepancies in input and output frame count:", discrepancy_subjects)
 
-# Run the process
-process_subjects_json()
-
-import os
-import json
-import math
-import numpy as np
-import pandas as pd
-from sklearn.linear_model import LinearRegression
-from sklearn.experimental import enable_iterative_imputer
-from sklearn.impute import IterativeImputer
-
-# Folder Paths
-INPUT_ROOT = r'/home/nixos/Development/openpose-fullscript/json'
-OUTPUT_FOLDER = '/home/nixos/Development/openpose-fullscript/Gait_parameters/'
-
-# Create output folder if it doesn't exist
-os.makedirs(OUTPUT_FOLDER, exist_ok=True)
-
-# Replace 0 values with NaN to handle missing data
-def zero_to_nan(values):
-    return [float('nan') if x == 0 else x for x in values]
-
-# Fill missing values using Iterative Imputer with Linear Regression
-def fill_missing_values(df, tolerance=5, last_missing_count=None):
-    cols_with_missing = df.columns[df.isna().any()].tolist()
-    current_missing_count = df.isna().sum().sum()
-    if not cols_with_missing or (
-            last_missing_count is not None and abs(last_missing_count - current_missing_count) <= tolerance):
-        return df
-
-    if set(cols_with_missing) == set(df.columns):
-        imputer = IterativeImputer(estimator=LinearRegression(), random_state=0)
-        imputed_data = imputer.fit_transform(df)
-        return pd.DataFrame(imputed_data, columns=df.columns, index=df.index)
-
-    predictors = df.drop(columns=cols_with_missing)
-    for col in cols_with_missing:
-        training_data = df.dropna(subset=[col])
-        test_data = df[df[col].isnull()]
-        X_train = training_data[predictors.columns]
-        y_train = training_data[col]
-        model = LinearRegression()
-        model.fit(X_train, y_train)
-        X_test = test_data[predictors.columns]
-        predictions = model.predict(X_test)
-        df.loc[df[col].isnull(), col] = predictions
-
-    return fill_missing_values(df, tolerance=tolerance, last_missing_count=current_missing_count)
-
-# Calculate angle using three points
-def calculate_angle_between_points(p1, p2, p3):
-    a = math.sqrt((p2[0] - p1[0]) ** 2 + (p2[1] - p1[1]) ** 2)
-    b = math.sqrt((p2[0] - p3[0]) ** 2 + (p2[1] - p3[1]) ** 2)
-    c = math.sqrt((p3[0] - p1[0]) ** 2 + (p3[1] - p1[1]) ** 2)
-    angle = math.acos((a ** 2 + b ** 2 - c ** 2) / (2 * a * b))
-    return math.degrees(angle)
-
-# Calculate hip flexion/extension angle
-def calc_hip_angle_S(hip, knee):
-    if hip == [-1, -1] or knee == [-1, -1]:
-        return None
-    a = np.array(hip)
-    b = np.array(knee)
-    ab = b - a
-    m_N = np.array([0, -1])
-    cosine_angle = np.dot(ab, m_N) / (np.linalg.norm(ab) * np.linalg.norm(m_N))
-    angle = np.arccos(cosine_angle)
-    return np.degrees(angle).tolist()
-
-# Calculate hip flexion/extension for all frames
-def calculate_hip_flexion_extension(data):
-    hip_ang_L = []
-    hip_ang_R = []
-    for coord in data:
-        # Right
-        RHip = [coord[18], coord[19]]
-        RKnee = [coord[20], coord[21]]
-        angle = calc_hip_angle_S(RHip, RKnee)
-        hip_ang_R.append(180 - angle)
-
-        # Left
-        LHip = [coord[24], coord[25]]
-        LKnee = [coord[26], coord[27]]
-        angle = calc_hip_angle_S(LHip, LKnee)
-        hip_ang_L.append(180 - angle)
-
-    return [hip_ang_L, hip_ang_R]
-
-# Calculate knee flexion/extension for all frames
-def calculate_knee_flexion_extension(data):
-    knee_flexion_extension_ang_L = []
-    knee_flexion_extension_ang_R = []
-    for coord in data:
-        # Right
-        RHip = [coord[18], coord[19]]
-        RKnee = [coord[20], coord[21]]
-        RAnkle = [coord[22], coord[23]]
-        angle = 180 - calculate_angle_between_points(RHip, RKnee, RAnkle)
-        knee_flexion_extension_ang_R.append(angle)
-
-        # Left
-        LHip = [coord[24], coord[25]]
-        LKnee = [coord[26], coord[27]]
-        LAnkle = [coord[28], coord[29]]
-        angle = 180 - calculate_angle_between_points(LHip, LKnee, LAnkle)
-        knee_flexion_extension_ang_L.append(angle)
-
-    return [knee_flexion_extension_ang_L, knee_flexion_extension_ang_R]
-
-# Calculate knee abduction/adduction for all frames
-def calculate_knee_abduction_adduction(data):
-    knee_abd_add_ang_L = []
-    knee_abd_add_ang_R = []
-    for coord in data:
-        # Right
-        RHip = [coord[18], coord[19]]
-        RKnee = [coord[20], coord[21]]
-        RAnkle = [coord[22], coord[23]]
-        angle = calculate_angle_between_points(RHip, RKnee, RAnkle)
-        knee_abd_add_ang_R.append(angle)
-
-        # Left
-        LHip = [coord[24], coord[25]]
-        LKnee = [coord[26], coord[27]]
-        LAnkle = [coord[28], coord[29]]
-        angle = calculate_angle_between_points(LHip, LKnee, LAnkle)
-        knee_abd_add_ang_L.append(angle)
-
-    return [knee_abd_add_ang_L, knee_abd_add_ang_R]
-
-# Calculate hip abduction/adduction for all frames
-def calculate_hip_abduction_adduction(data):
-    hip_abd_add_ang_L = []
-    hip_abd_add_ang_R = []
-    for coord in data:
-        # Right
-        RShoulder = [coord[6], coord[7]]
-        RHip = [coord[18], coord[19]]
-        RKnee = [coord[20], coord[21]]
-        angle = calculate_angle_between_points(RShoulder, RHip, RKnee)
-        hip_abd_add_ang_R.append(angle)
-
-        # Left
-        LShoulder = [coord[12], coord[13]]
-        LHip = [coord[24], coord[25]]
-        LKnee = [coord[26], coord[27]]
-        angle = calculate_angle_between_points(LShoulder, LHip, LKnee)
-        hip_abd_add_ang_L.append(angle)
-
-    return [hip_abd_add_ang_L, hip_abd_add_ang_R]
-
-# Process keypoints from JSON files
-def calculate_keypoints(path_to_json):
-    interpolated_coordinates = []
-    count = 0
-    total_files = len([file for file in os.listdir(path_to_json) if file.endswith('.json')])
-
-    for file_name in [file for file in os.listdir(path_to_json) if file.endswith('.json')]:
-        file_name_splitted = file_name.rsplit("_", 2)
-        original_file_name = file_name_splitted[0] + '_' + str(count).zfill(12) + '_' + file_name_splitted[2]
-
-        with open(os.path.join(path_to_json, original_file_name)) as json_file:
-            data = json.load(json_file)
-            count += 1
-            if len(data["people"]):
-                coordinates = data["people"][0]["pose_keypoints_2d"]
-                coordinates = zero_to_nan(coordinates)
-
-                coord = [coordinates[i:i + 2] for i in range(0, len(coordinates), 3)]
-                interpolated_coordinates.append([coord[i][0] for i in range(25)] + [coord[i][1] for i in range(25)])
-
-    df = pd.DataFrame(interpolated_coordinates, columns=[f'{joint}{axis}' for joint in [
-        'Nose', 'Neck', 'RShoulder', 'RElbow', 'RWrist', 'LShoulder', 'LElbow', 'LWrist',
-        'MHip', 'RHip', 'RKnee', 'RAnkle', 'LHip', 'LKnee', 'LAnkle', 'REye', 'LEye',
-        'REar', 'LEar', 'LBigToe', 'LSmallToe', 'LHeel', 'RBigToe', 'RSmallToe', 'RHeel']
-                                                         for axis in ['X', 'Y']])
-
-    df = fill_missing_values(df)
-    return df.values.tolist(), total_files, df.shape[0]
-
 # Process each subject folder
 def process_subjects_gait():
     discrepancy_subjects = []
@@ -467,13 +287,11 @@ def process_subjects_gait():
         print("\nSubjects with discrepancies:", discrepancy_subjects)
 
 # Run the process
+process_subjects_json()
+
+# Run the process
 process_subjects_gait()
 
-
-import os
-import pandas as pd
-from scipy.interpolate import CubicSpline
-import numpy as np
 
 # File paths
 csv_dir = r'/home/nixos/Development/openpose-fullscript/Gait_parameters'
@@ -552,12 +370,6 @@ for subject_name in os.listdir(csv_dir):
         print(f"File not found for subject: {subject_name}")
 
 print("Processing complete!")
-
-
-
-#Combine front and side files
-import os
-import pandas as pd
 
 # Input and output folder paths
 input_folder = r"/home/nixos/Development/openpose-fullscript/Selected_one_gait_CSV"
@@ -672,7 +484,7 @@ for filename in os.listdir(input_folder):
             results.append({"File": filename, "Prediction": prediction_label})
 
             # Print the filename and prediction
-            print(f"File: {filename}, Prediction: {prediction_label}")
+            print(f"File: {filename}, Prediction: {prediction_label} ({prediction * 100}%)")
 
 # Save results to a CSV file
 output_dir = r"/home/nixos/Development/openpose-fullscript/Results"
