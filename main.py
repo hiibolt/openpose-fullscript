@@ -8,10 +8,17 @@ from sklearn.linear_model import LinearRegression
 from sklearn.experimental import enable_iterative_imputer
 from sklearn.impute import IterativeImputer
 from scipy.interpolate import CubicSpline
+import argparse
+
+# Import paths
+parser = argparse.ArgumentParser()
+parser.add_argument("path")
+args = parser.parse_args()
+print(args.path)
 
 # Folder Paths
-INPUT_ROOT = r'/home/nixos/Development/openpose-fullscript/json'
-OUTPUT_FOLDER = '/home/nixos/Development/openpose-fullscript/Gait_parameters/'
+INPUT_ROOT = args.path + '/json'
+OUTPUT_FOLDER = args.path + '/Gait_parameters/'
 
 # Create output folder if it doesn't exist
 os.makedirs(OUTPUT_FOLDER, exist_ok=True)
@@ -294,8 +301,8 @@ process_subjects_gait()
 
 
 # File paths
-csv_dir = r'/home/nixos/Development/openpose-fullscript/Gait_parameters'
-output_dir_selected = r'/home/nixos/Development/openpose-fullscript/Selected_one_gait_CSV'
+csv_dir = args.path + '/Gait_parameters'
+output_dir_selected = args.path + '/Selected_one_gait_CSV'
 
 # Ensure the output directories exist
 os.makedirs(output_dir_selected, exist_ok=True)
@@ -372,8 +379,8 @@ for subject_name in os.listdir(csv_dir):
 print("Processing complete!")
 
 # Input and output folder paths
-input_folder = r"/home/nixos/Development/openpose-fullscript/Selected_one_gait_CSV"
-output_folder = r"/home/nixos/Development/openpose-fullscript/Combined_front_side_columns"
+input_folder = args.path + '/Selected_one_gait_CSV'
+output_folder = args.path + '/Combined_front_side_columns'
 
 # Ensure the output directory exists
 os.makedirs(output_folder, exist_ok=True)
@@ -441,11 +448,11 @@ from sklearn.preprocessing import MinMaxScaler
 from tensorflow.keras.models import load_model
 
 # --- Load the trained model ---
-model_path = r'/home/nixos/Development/openpose-fullscript/Model/ASD_Classifier_Model.h5'  # Replace with your actual model file path
+model_path = args.path + '/Model/ASD_Classifier_Model.h5'  # Replace with your actual model file path
 model = load_model(model_path)  # Load the saved model
 
 # --- Folder containing the CSV files ---
-input_folder = r'/home/nixos/Development/openpose-fullscript/Combined_front_side_columns'
+input_folder = args.path + '/Combined_front_side_columns'
 
 # --- Function to validate CSV files ---
 def validate_csv(file_path):
@@ -487,7 +494,7 @@ for filename in os.listdir(input_folder):
             print(f"File: {filename}, Prediction: {prediction_label} ({prediction * 100}%)")
 
 # Save results to a CSV file
-output_dir = r"/home/nixos/Development/openpose-fullscript/Results"
+output_dir = args.path + '/Results'
 output_file = os.path.join(output_dir, "predictions.csv")
 os.makedirs(output_dir, exist_ok=True)
 
