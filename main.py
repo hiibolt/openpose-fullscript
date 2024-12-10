@@ -13,6 +13,7 @@ import argparse
 # Import paths
 parser = argparse.ArgumentParser()
 parser.add_argument("path")
+parser.add_argument("result_path")
 args = parser.parse_args()
 print(args.path)
 
@@ -488,7 +489,7 @@ for filename in os.listdir(input_folder):
             prediction_label = 'ASD' if prediction > 0.5 else 'No ASD'  # Threshold for binary classification
 
             # Append results to the list
-            results.append({"File": filename, "Prediction": prediction_label})
+            results.append({"File": filename, "Score": prediction, "Prediction": prediction_label})
 
             # Print the filename and prediction
             print(f"File: {filename}, Prediction: {prediction_label} ({prediction * 100}%)")
@@ -497,6 +498,11 @@ for filename in os.listdir(input_folder):
 output_dir = args.path + '/Results'
 output_file = os.path.join(output_dir, "predictions.csv")
 os.makedirs(output_dir, exist_ok=True)
+individual_output = os.path.join(args.result_path, results[0]["File"].split('_')[0])
+os.makedirs(individual_output, exist_ok=True)
+with open(os.path.join(individual_output, 'final_score'), 'w', encoding="utf-8") as f:
+    f.write(str(results[0]["Score"][0][0]))
+    f.close()
 
 # Save the results to the specified path
 results_df = pd.DataFrame(results)  # Convert results to a DataFrame

@@ -1,0 +1,40 @@
+#!/bin/bash
+
+#PBS -N hello_world
+#PBS -j oe
+
+#Note - on Metis
+#              Nchunks<=32, for GPU chunks
+#              Nchunks<=4096/Ncpus for CPU-only chunks
+#              (run 'shownodes' command to find the number of free cpus)
+#              Ncpus<=128, the total number of CPUs per node is 128
+#              NPmpi<=Ncpus, the total number of CPUs allocated for MPI tasks,
+#                              request NPmpi=Ncpus for non-OPENMP jobs
+#              Ngpus==1,  the total number of GPUs per node is 1
+#              X<=256,  28 of 32 Metis modes have 256 GB of RAM
+#                       special jobs can request up to 1024 GB of RAM (4 nodes)
+#
+# Below, we request two chunks;
+#  each chunk needs 8 CPUs, 1 MPI processes, 1 GPU card, and 2 GB RAM
+#PBS -l select=1:ncpus=8:mpiprocs=1:ngpus=1:mem=251gb
+#PBS -l walltime=00:15:00
+
+# When to send a status email ("-m abe" sends e-mails at job abort, begin, and end)
+#--PBS -m ae
+#--#PBS -M account@niu.edu
+
+# Move to the tmpfs and build folder structure
+cd $TMPDIR
+cp -r $BACKEND_DIR/Model .
+cp $BACKEND_DIR/main.py .
+cp $BACKEND_DIR/requirements.txt .
+cp -r $BACKEND_DIR/json .
+
+module purge
+module load python/python-3.12.4
+
+python3 -m pip install -U pip --user
+pip3 install --upgrade pip
+pip3 install -r requirements.txt --user
+
+python3 main.py . $OUTPUT_PATH
